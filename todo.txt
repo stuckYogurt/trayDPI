@@ -1,0 +1,4 @@
+- in case of error process indicator shows it
+- compile into an app via py2app
+- set up shortcuts
+- automatic spoofDPI download from github

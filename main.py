@@ -22,6 +22,7 @@ params = {
     'default-path-params': '~/Library/Caches/',
     'default-path-exec': '~/.spoof-dpi/bin/spoof-dpi',
 
+    'show-terminal-output ': True,
 }
 
 cmd = ''
@@ -53,7 +54,7 @@ class StatusBarApp( rumps.App ):
     def button(self, sender):
         if sender.title == 'Turn on':
 
-            self.termProcess = subprocess.Popen(self.getCMD(), stdout=subprocess.PIPE, shell=True)
+            self.termProcess = subprocess.Popen(self.getCMD(), stdout=subprocess.PIPE, shell=True, universal_newlines=True)
             # if self.termProcess.returncode != 0:
             #     rumps.Window(
             #         message="Something went wrong during script hangling", title='error',
@@ -62,15 +63,26 @@ class StatusBarApp( rumps.App ):
             sender.title = 'Turn off'
         else:
             sender.title = 'Turn on'
+            commCallback = self.termProcess.stdout.read()
             self.termProcess.terminate()
             self.termProcess.wait()
             print("Process finished with returncode: {}".format(self.termProcess.returncode))
+            print(commCallback)
+
+            if params['show-terminal-output']:
+                newWind = rumps.Window(
+                    message="Process finished with returncode: {}".format(self.termProcess.returncode),
+                    title="Returncode",
+                    default_text = commCallback
+                )
+
+                newWind.run()
 
     @rumps.clicked('About')
     def about(self, _):
         webopen('https://github.com/stuckYogurt/trayDPI')
 
-
+    # callback for properties buttons
     def foo(self,sender):
         if type(params[sender.key]) is bool:
             params[sender.key] = not params[sender.key]
@@ -103,13 +115,15 @@ class StatusBarApp( rumps.App ):
                 '-port ' + params['port'] + \
                 ' -timeout ' + params['timeout'] + \
                 ((' -url ' + params['url']) if params['url'] else '') + \
-                ' -window-size ' + params['window-size']
+                ' -window-size ' + params['window-size'] + ' -no-banner'
 
     def restart(self):
         if self.turnButt.title == 'Turn off':
             self.termProcess.terminate()
             self.termProcess.wait()
             print("Process finished with returncode: {}".format(self.termProcess.returncode))
+
+
 
             self.termProcess = subprocess.Popen(self.getCMD().split(), shell=params['open-shell'])
 
